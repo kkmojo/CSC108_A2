@@ -149,6 +149,8 @@ def move_big_joker(deck):
 
 def triple_cut(deck):
     """ (list of int) -> NoneType
+
+    Do a triple cut on the deck.
     
     """
     #find first and second joker index by comparing the index of the two joker
@@ -171,6 +173,13 @@ def triple_cut(deck):
 
 def insert_top_to_bottom(deck):
     """ (list of int) -> NoneType
+
+    Examine the value of the bottom card of the deck; 
+    move that many cards from the top of the deck to the bottom, 
+    inserting them just above the bottom card. Special case: 
+    if the bottom card is the big joker, 
+    use the value of the small joker as the number of cards.
+
     """
     v = deck[-1]
     # v is equal to the big joker, then change it to small joker
@@ -190,6 +199,11 @@ def insert_top_to_bottom(deck):
 
 def get_card_at_top_index(deck):
     """ (list of int) -> int
+
+    Using the value of the top card as an index, 
+    return the card in the deck at that index. 
+    Special case: if the top card is the big joker, 
+    use the value of the small joker as the index.
     """
     index = deck[0]
     #if the card is the big joker change it to small joker
@@ -200,6 +214,10 @@ def get_card_at_top_index(deck):
 
 def get_next_keystream_value(deck):
     """ (list of int) -> int
+
+    This is the function that repeats all five steps of the algorithm 
+    until a valid keystream value is produced.
+
     """
 
     move_small_joker(deck)
@@ -220,6 +238,10 @@ def get_next_keystream_value(deck):
 
 def process_messages(deck, msg, command):
     """ (list of int, list of str, str) -> list of str
+
+    Return a list of encrypted or decrypted messages, 
+    in the same order as they appear in the given list of messages. 
+    Note that the first parameter may also be mutated during a function call.
     """
     if command == ENCRYPT:
         func = encrypt_letter
@@ -230,11 +252,16 @@ def process_messages(deck, msg, command):
 
 def read_messages(msg_file):
     """ (file open for reading) -> list of str
+
+    Read and return the contents of the file as a list of messages, 
+    in the order in which they appear in the file. Strip the newline from each line.
     """
     return [clean_message(msg_file.read())]
 
 def is_valid_deck(deck):
     """ (list of int) -> bool
+
+    Return True if and only if the candidate deck is a valid deck of cards.
     """
     for i in range(1, get_big_joker_value(deck)):
         #encuse the cards are consecutive
@@ -245,6 +272,8 @@ def is_valid_deck(deck):
 
 def read_deck(deck_file):
     """ (file open for reading) -> list of int
+
+    Return True if and only if the candidate deck is a valid deck of cards.
     """
     return [int(i) for i in deck_file.read().split()]
 
