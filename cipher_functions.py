@@ -151,7 +151,14 @@ def triple_cut(deck):
     """ (list of int) -> NoneType
 
     Do a triple cut on the deck.
-    
+
+    >>> deck = [1,2,3,9,5,6,8,4,7]
+    triple_cut(deck)
+    '4,7,9,5,6,8,1,2,3'
+
+    >>> deck = [1,4,7,10,13,16,19,22,25,3,6,28,9,12,15,18,21,24,2,27,5,8,11,14,17,20,23,26]
+    triple_cut(deck)
+    '5,8,11,14,17,20,23,26,28,9,12,15,18,21,24,2,27,1,4,7,10,13,16,19,22,25,3,6'    
     """
     #find first and second joker index by comparing the index of the two joker
     big_joker_index = deck.index(get_big_joker_value(deck))
@@ -162,13 +169,13 @@ def triple_cut(deck):
     upper_part = deck[:first_joker_index]
     middle_part = deck[first_joker_index:second_joker_index+1]
     lower_part = deck[second_joker_index+1:]
-
+ 
     #swap the position of the cards
-    new_list = upper_part + middle_part +lower_part
+    new_list = lower_part + middle_part +upper_part
 
     #change the postion in the deck
-    for i in range(0, len(new_list)):
-        deck[i] = new_list [i]
+    for i in range(len(new_list)):
+        deck[i] = new_list[i]
 
 
 def insert_top_to_bottom(deck):
@@ -180,8 +187,17 @@ def insert_top_to_bottom(deck):
     if the bottom card is the big joker, 
     use the value of the small joker as the number of cards.
 
+    >>> deck = [4,7,9,5,6,8,1,2,3]
+    insert_top_to_bottom(deck)
+    '5,6,8,1,2,4,7,9'
+
+    >>> deck = [5,8,11,14,17,20,23,26,28,9,12,15,18,21,24,2,27,1,4,7,10,13,16,19,22,25,3,6]
+    insert_top_to_bottom(deck)
+    '23,26,28,9,12,15,18,21,24,2,27,1,4,7,10,13,16,19,22,25,3,5,8,11,14,17,20,6'
+
     """
     v = deck[-1]
+    l = deck[-1] #the last value of array
     # v is equal to the big joker, then change it to small joker
     if v == get_big_joker_value(deck):
         v = get_small_joker_value(deck)
@@ -190,10 +206,10 @@ def insert_top_to_bottom(deck):
     rest_list = deck[v:-1]
 
     #put the top list to the bottom
-    new_list = rest_list + top + [v]
+    new_list = rest_list + top + [l] #use l in case we change the value of v
 
     #change the position in the deck
-    for i in range(0, len(new_list)):
+    for i in range(len(new_list)):
         deck[i] = new_list[i]
 
 
@@ -204,6 +220,14 @@ def get_card_at_top_index(deck):
     return the card in the deck at that index. 
     Special case: if the top card is the big joker, 
     use the value of the small joker as the index.
+
+    >>> deck = [4,7,9,5,6,8,1,2,3]
+    get_card_at_top_index(deck)
+    '6'
+
+    >>> deck = [23,26,28,9,12,15,18,21,24,2,27,1,4,7,10,13,16,19,22,25,3,5,8,11,14,17,20,6]
+    get_card_at_top_index(deck)
+    '11'
     """
     index = deck[0]
     #if the card is the big joker change it to small joker
@@ -218,6 +242,13 @@ def get_next_keystream_value(deck):
     This is the function that repeats all five steps of the algorithm 
     until a valid keystream value is produced.
 
+    >>> deck = [1,4,7,10,13,16,19,22,25,28,3,6,9,12,15,18,21,24,27,2,5,8,11,14,17,20,23,26]
+    get_next_keystream_value(deck)
+    '11'
+
+    >>> deck = [23,26,28,9,12,15,18,21,24,2,27,1,4,7,10,13,16,19,22,25,3,5,8,11,14,17,20,6]
+    get_next_keystream_value(deck)
+    '9'
     """
 
     move_small_joker(deck)
@@ -242,13 +273,32 @@ def process_messages(deck, msg, command):
     Return a list of encrypted or decrypted messages, 
     in the same order as they appear in the given list of messages. 
     Note that the first parameter may also be mutated during a function call.
+
+    >>> deck = [1,4,7,10,13,16,19,22,25,28,3,6,9,12,15,18,21,24,27,2,5,8,11,14,17,20,23,26]
+        msg = ['OXXIKQCPSZXWW']
+        process_messages(deck,msg,'d')
+        '['DOABARRELROLL']'
+
+        deck = [1,4,7,10,13,16,19,22,25,28,3,6,9,12,15,18,21,24,27,2,5,8,11,14,17,20,23,26]
+        msg = ['THISISITTHEMASTERSWORD','NOTHISCANTBEITTOOBAD']
+        process_messages(deck,msg,'e')
+        '['EQFZSRTEAPNXLSRJAMNGAT','GLCEGMOTMTRWKHAMGNME']'
     """
+
+    modified_msg = []
     if command == ENCRYPT:
         func = encrypt_letter
     else:
         func = decrypt_letter
 
-    return [func(c, get_next_keystream_value(deck)) for c in msg]
+    for sentence in msg:
+        new_sentence = ''
+        for c in sentence:
+            new_sentence+=func(c,get_next_keystream_value(deck))
+        modified_msg.append(new_sentence)
+
+    return modified_msg
+
 
 def read_messages(msg_file):
     """ (file open for reading) -> list of str
@@ -256,12 +306,20 @@ def read_messages(msg_file):
     Read and return the contents of the file as a list of messages, 
     in the order in which they appear in the file. Strip the newline from each line.
     """
-    return [clean_message(msg_file.read())]
+    return [clean_message(line) for line in msg_file.readlines()]
 
 def is_valid_deck(deck):
     """ (list of int) -> bool
 
     Return True if and only if the candidate deck is a valid deck of cards.
+
+    >>> deck = [1,2,3,4,5,6,7,8]
+    is_valid_deck(deck)
+    'True'
+
+    >>> deck == [2,15,64]
+    is_valid_deck(deck)
+    'False'
     """
     for i in range(1, get_big_joker_value(deck)):
         #encuse the cards are consecutive
@@ -276,37 +334,3 @@ def read_deck(deck_file):
     Return True if and only if the candidate deck is a valid deck of cards.
     """
     return [int(i) for i in deck_file.read().split()]
-
-
-def main():
-    msg = 'Python Type "help", "copyright", "credits" or "license" for more information.'
-    msg2 = '?>??!!!23123123'
-    print(decrypt_letter('L',8))
-    print(clean_message(msg2))
-    deck = [1,4,7,10,13,16,19,22,25,28,3,6,9,12,15,18,21,24,27,2,5,8,11,14,17,20,23,26]
-
-        
-    print(deck)
-    #swap_cards(deck,0)
-    #move_small_joker(deck)
-    #move_big_joker(deck)
-    #deck = triple_cut(deck)
-    #insert_top_to_bottom(deck)
-    #print(get_small_joker_value(deck))
-    #print(get_big_joker_value(deck))
-    #print(clean_message(msg))
-    #print(get_next_keystream_value(deck))
-    #print(get_next_keystream_value(deck))
-    #print(encrypt_letter('Y', 14))
-    #print(decrypt_letter(encrypt_letter('Y',14),14))
-    file1 = open('deck2.txt', 'r')
-    read_deck(file1)
-    file2 = open('message_file1.txt', 'r')
-    print(read_messages(file2))
-    key = []
-    for i in range(100):
-        key.append(get_next_keystream_value(deck))
-    print(key)
-
-if __name__ == "__main__":
-    main()
